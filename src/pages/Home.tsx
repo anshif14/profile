@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { motion, useScroll, useTransform, useAnimation, useInView } from 'framer-motion';
+import { motion, useAnimation, useInView } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import { Stars } from '@react-three/drei';
 
