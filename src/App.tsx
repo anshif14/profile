@@ -1,5 +1,4 @@
 import { Routes, Route } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import { GlobalStyles } from './styles/GlobalStyles';
 import { useRef } from 'react';

@@ -139,10 +139,10 @@ const Overlay = styled(motion.div)`
 `;
 
 interface NavbarProps {
-  scrollToSection?: (ref: React.RefObject<HTMLDivElement>) => void;
-  aboutRef?: React.RefObject<HTMLDivElement>;
-  projectsRef?: React.RefObject<HTMLDivElement>;
-  contactRef?: React.RefObject<HTMLDivElement>;
+  scrollToSection?: (ref: React.RefObject<HTMLDivElement | null>) => void;
+  aboutRef?: React.RefObject<HTMLDivElement | null>;
+  projectsRef?: React.RefObject<HTMLDivElement | null>;
+  contactRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ scrollToSection, aboutRef, projectsRef, contactRef }) => {
@@ -202,7 +202,7 @@ const Navbar: React.FC<NavbarProps> = ({ scrollToSection, aboutRef, projectsRef,
     setIsOpen(!isOpen);
   };
 
-  const handleNavClick = (section: string, ref?: React.RefObject<HTMLDivElement>) => {
+  const handleNavClick = (_: string, ref?: React.RefObject<HTMLDivElement | null>) => {
     if (scrollToSection && ref) {
       scrollToSection(ref);
     }

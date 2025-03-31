@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
@@ -155,7 +155,6 @@ const Dashboard = () => {
   const { admin, isAuthenticated, logout } = useAdmin();
   const navigate = useNavigate();
   const [resumeUrl, setResumeUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -179,8 +178,6 @@ const Dashboard = () => {
         }
       } catch (error) {
         console.error("Error fetching resume URL:", error);
-      } finally {
-        setLoading(false);
       }
     };
     
