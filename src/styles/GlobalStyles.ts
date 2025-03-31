@@ -3,11 +3,11 @@ import { createGlobalStyle } from 'styled-components';
 export const GlobalStyles = createGlobalStyle`
   :root {
     --primary: #0a0a0a;
-    --secondary: #1a1a1a;
+    --secondary: #151515;
     --accent: #6c63ff;
-    --accent2: #ff6b6b;
+    --accent2: #ff6584;
     --text: #ffffff;
-    --text-secondary: #b3b3b3;
+    --text-secondary: rgba(255, 255, 255, 0.7);
   }
 
   * {
@@ -17,27 +17,29 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   body {
-    background: var(--primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: var(--primary);
     color: var(--text);
-    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    font-size: 16px;
     overflow-x: hidden;
   }
 
   ::-webkit-scrollbar {
-    width: 8px;
+    width: 10px;
   }
 
   ::-webkit-scrollbar-track {
-    background: var(--secondary);
+    background: var(--primary);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: var(--accent);
-    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--accent2);
+    background: rgba(255, 255, 255, 0.2);
   }
 
   a {

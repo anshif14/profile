@@ -1,73 +1,119 @@
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { motion, useScroll, useTransform, useInView } from 'framer-motion';
+import { motion, useScroll, useTransform, useAnimation, useInView } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
-import { Stars, OrbitControls } from '@react-three/drei';
-import { useScrollAnimation } from '../hooks/useScrollAnimation';
+import { Stars } from '@react-three/drei';
 
+// Styled components with enhanced visuals and mobile optimization
 const HomeContainer = styled.div`
-  min-height: 100vh;
   position: relative;
-  overflow: hidden;
-  background: radial-gradient(circle at center, var(--primary) 0%, #0a0a0a 100%);
+  background: linear-gradient(to bottom, #0a0a0a, #151515);
+  overflow-x: hidden;
 `;
 
 const Section = styled(motion.section)`
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
   position: relative;
-  padding: 100px 5%;
+  padding: 80px 5%;
   overflow: hidden;
+  will-change: transform;
+  
+  @media (max-width: 768px) {
+    padding: 60px 5%;
+    justify-content: flex-start;
+    padding-top: 100px;
+  }
 `;
 
 const HeroSection = styled(Section)`
-  padding-top: 0;
-  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(108,99,255,0.1) 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  min-height: 100vh;
+  
+  @media (max-width: 480px) {
+    padding-top: 120px;
+    justify-content: flex-start;
+  }
 `;
 
 const Content = styled(motion.div)`
-  text-align: center;
-  z-index: 1;
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto;
+  z-index: 2;
   position: relative;
 `;
 
 const Title = styled(motion.h1)`
-  font-size: 5rem;
-  margin-bottom: 1rem;
-  background: linear-gradient(45deg, var(--accent), var(--accent2));
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  margin-bottom: 1.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #6c63ff, #ff6584);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 0 30px rgba(108,99,255,0.3);
   letter-spacing: -1px;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 1rem;
+  }
 `;
 
-const Subtitle = styled(motion.p)`
-  font-size: 1.8rem;
-  color: var(--text-secondary);
-  margin-bottom: 2rem;
-  line-height: 1.6;
-  max-width: 800px;
+const SubTitle = styled(motion.p)`
+  font-size: clamp(1rem, 3vw, 1.6rem);
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 2.5rem;
+  max-width: 700px;
   margin-left: auto;
   margin-right: auto;
+  line-height: 1.6;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+  }
 `;
 
-const CTAButton = styled(motion.button)`
-  padding: 1.2rem 3rem;
-  font-size: 1.2rem;
+const ButtonGroup = styled(motion.div)`
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+`;
+
+const Button = styled(motion.button)`
+  padding: 1rem 2.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
   background: transparent;
-  border: 2px solid var(--accent);
-  color: var(--accent);
+  border: 2px solid #6c63ff;
+  color: #6c63ff;
   border-radius: 50px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
   overflow: hidden;
+  position: relative;
   z-index: 1;
+  
+  @media (max-width: 480px) {
+    width: 100%;
+    padding: 0.9rem 1.5rem;
+    font-size: 1rem;
+  }
   
   &::before {
     content: '';
@@ -76,427 +122,764 @@ const CTAButton = styled(motion.button)`
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(45deg, var(--accent), var(--accent2));
-    opacity: 0;
-    transition: opacity 0.3s ease;
+    background: linear-gradient(45deg, #6c63ff, #ff6584);
     z-index: -1;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform 0.5s ease;
+  }
+  
+  &:hover::before {
+    transform: scaleX(1);
   }
   
   &:hover {
-    color: var(--primary);
+    color: #fff;
     border-color: transparent;
-    box-shadow: 0 0 30px rgba(108,99,255,0.3);
-    
-    &::before {
-      opacity: 1;
-    }
+  }
+`;
+
+const SecondaryButton = styled(Button)`
+  background: transparent;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+  
+  &::before {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  &:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+`;
+
+const ScrollDown = styled(motion.div)`
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.8);
+  
+  @media (max-width: 768px) {
+    bottom: 20px;
+  }
+  
+  svg {
+    width: 30px;
+    height: 30px;
+    margin-top: 8px;
   }
 `;
 
 const BackgroundCanvas = styled.div`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
-  opacity: 0.8;
-`;
-
-const ScrollButton = styled(motion.button)`
-  position: absolute;
-  bottom: 2rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background: transparent;
-  border: none;
-  color: var(--accent);
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem;
-  transition: all 0.3s ease;
-
-  &:hover {
-    color: var(--accent2);
-  }
-`;
-
-const ScrollText = styled.span`
-  font-size: 1rem;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 2px;
-`;
-
-const ScrollLine = styled(motion.div)`
-  width: 2px;
-  height: 60px;
-  background: linear-gradient(to bottom, var(--accent), var(--accent2));
-  border-radius: 2px;
+  pointer-events: none;
 `;
 
 const SectionTitle = styled(motion.h2)`
-  font-size: 3.5rem;
-  margin-bottom: 3rem;
+  font-size: clamp(2rem, 5vw, 3rem);
   text-align: center;
-  background: linear-gradient(45deg, var(--accent), var(--accent2));
+  margin-bottom: 2.5rem;
+  background: linear-gradient(135deg, #6c63ff, #ff6584);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: 0 0 30px rgba(108,99,255,0.3);
   position: relative;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 2rem;
+  }
   
   &::after {
     content: '';
     position: absolute;
-    bottom: 1rem;
+    bottom: -15px;
     left: 50%;
     transform: translateX(-50%);
-    width: 100px;
-    height: 3px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(to right, #6c63ff, #ff6584);
+    border-radius: 2px;
+    
+    @media (max-width: 768px) {
+      width: 60px;
+      height: 3px;
+      bottom: -10px;
+    }
   }
 `;
 
-const SkillsGrid = styled(motion.div)`
+const Grid = styled(motion.div)`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
-`;
-
-const SkillCard = styled(motion.div)`
-  background: rgba(108,99,255,0.05);
-  padding: 2.5rem;
-  border-radius: 20px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(108,99,255,0.1);
-  transition: all 0.3s ease;
-  
-  h3 {
-    color: var(--accent);
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-  }
-  
-  p {
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-    line-height: 1.6;
-  }
-  
-  &:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 30px rgba(108,99,255,0.1);
-    transform: translateY(-5px);
-  }
-`;
-
-const ProjectsGrid = styled(motion.div)`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 2.5rem;
-  margin-top: 2rem;
+  margin-top: 4rem;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    margin-top: 2.5rem;
+    gap: 1.5rem;
+  }
+  
+  @media (max-width: 480px) {
+    margin-top: 2rem;
+    gap: 1.2rem;
+  }
+`;
+
+const Card = styled(motion.div)`
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  height: 100%;
+  
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
+  
+  /* Remove hover animations on mobile for better performance */
+  @media (min-width: 769px) {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 30px rgba(108, 99, 255, 0.2);
+    }
+  }
+`;
+
+const CardTitle = styled.h3`
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  color: #fff;
+  background: linear-gradient(135deg, #6c63ff, #ff6584);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  
+  @media (max-width: 768px) {
+    font-size: 1.3rem;
+    margin-bottom: 0.8rem;
+  }
+`;
+
+const CardContent = styled.p`
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.6;
+  
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
 `;
 
 const ProjectCard = styled(motion.div)`
-  background: rgba(108,99,255,0.05);
-  border-radius: 20px;
+  border-radius: 16px;
   overflow: hidden;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(108,99,255,0.1);
-  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   
-  &:hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 30px rgba(108,99,255,0.1);
-    transform: translateY(-5px);
+  /* Remove hover animations on mobile for better performance */
+  @media (min-width: 769px) {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 30px rgba(108, 99, 255, 0.2);
+    }
   }
 `;
 
 const ProjectImage = styled.div`
-  width: 100%;
-  height: 250px;
-  background: #2a2a2a;
-  position: relative;
+  height: 200px;
   overflow: hidden;
+  position: relative;
   
-  &::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.8));
+  @media (max-width: 768px) {
+    height: 180px;
   }
   
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.5s ease;
-  }
-  
-  &:hover img {
-    transform: scale(1.1);
+    
+    /* Remove hover animations on mobile for better performance */
+    @media (min-width: 769px) {
+      transition: transform 0.5s ease;
+      
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
   }
 `;
 
 const ProjectContent = styled.div`
-  padding: 2rem;
+  padding: 1.5rem;
+  
+  @media (max-width: 768px) {
+    padding: 1.25rem;
+  }
 `;
 
 const ProjectTitle = styled.h3`
-  color: var(--text);
-  font-size: 1.8rem;
-  margin-bottom: 1rem;
-  background: linear-gradient(45deg, var(--accent), var(--accent2));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+  color: #fff;
+  
+  @media (max-width: 768px) {
+    font-size: 1.3rem;
+  }
 `;
 
 const ProjectDescription = styled.p`
-  color: var(--text-secondary);
-  font-size: 1.1rem;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1rem;
   line-height: 1.6;
-  margin-bottom: 1.5rem;
+  
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+    margin-bottom: 0.8rem;
+  }
 `;
 
-const TechStack = styled.div`
+const TagContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
+  gap: 0.5rem;
 `;
 
-const TechTag = styled.span`
-  background: rgba(108,99,255,0.1);
-  color: var(--accent);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
+const Tag = styled.span`
+  background: rgba(108, 99, 255, 0.2);
+  padding: 0.25rem 0.75rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  color: #6c63ff;
   
-  &:hover {
-    background: rgba(108,99,255,0.2);
-    transform: translateY(-2px);
+  @media (max-width: 768px) {
+    padding: 0.2rem 0.6rem;
+    font-size: 0.75rem;
+  }
+`;
+
+const ContactForm = styled(motion.form)`
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 600px;
+  margin: 0 auto;
+  margin-top: 3rem;
+  
+  @media (max-width: 768px) {
+    margin-top: 2rem;
+    gap: 1.2rem;
+  }
+`;
+
+const FormGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  
+  @media (max-width: 768px) {
+    gap: 0.4rem;
+  }
+`;
+
+const Label = styled.label`
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.8);
+  
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+  }
+`;
+
+const Input = styled.input`
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 1rem;
+  
+  @media (max-width: 768px) {
+    padding: 0.8rem;
+    font-size: 0.95rem;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #6c63ff;
+  }
+`;
+
+const TextArea = styled.textarea`
+  padding: 1rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 1rem;
+  min-height: 150px;
+  resize: vertical;
+  
+  @media (max-width: 768px) {
+    padding: 0.8rem;
+    font-size: 0.95rem;
+    min-height: 120px;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: #6c63ff;
   }
 `;
 
 const FloatingShape = styled(motion.div)`
   position: absolute;
-  width: 300px;
-  height: 300px;
-  background: linear-gradient(45deg, var(--accent), var(--accent2));
   border-radius: 50%;
-  filter: blur(100px);
+  background: linear-gradient(135deg, #6c63ff, #ff6584);
+  filter: blur(80px);
   opacity: 0.1;
   z-index: 0;
+  
+  @media (max-width: 768px) {
+    filter: blur(60px);
+    opacity: 0.08;
+  }
 `;
 
+// Main component
 const Home = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const aboutRef = useRef<HTMLDivElement>(null);
+  const servicesRef = useRef<HTMLDivElement>(null);
   const projectsRef = useRef<HTMLDivElement>(null);
+  const contactRef = useRef<HTMLDivElement>(null);
   
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"]
-  });
+  // Check for mobile device on mount
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
+  
+  // Animation controls for each section
+  const aboutControls = useAnimation();
+  const servicesControls = useAnimation();
+  const projectsControls = useAnimation();
+  const contactControls = useAnimation();
 
-  const isAboutInView = useInView(aboutRef, { once: true, margin: "-100px" });
-  const isProjectsInView = useInView(projectsRef, { once: true, margin: "-100px" });
+  // For section animations - use a lower threshold for better performance
+  const aboutInView = useInView(aboutRef, { once: true, amount: 0.1 });
+  const servicesInView = useInView(servicesRef, { once: true, amount: 0.1 });
+  const projectsInView = useInView(projectsRef, { once: true, amount: 0.1 });
+  const contactInView = useInView(contactRef, { once: true, amount: 0.1 });
 
-  const y = useTransform(scrollYProgress, [0, 1000], [0, 300]);
-  const opacity = useTransform(scrollYProgress, [0, 300], [1, 0]);
-  const { opacity: scrollOpacity, y: scrollYValue } = useScrollAnimation(0, 300);
+  // Optimize the trigger for animations
+  useEffect(() => {
+    if (aboutInView) aboutControls.start('visible');
+    if (servicesInView) servicesControls.start('visible');
+    if (projectsInView) projectsControls.start('visible');
+    if (contactInView) contactControls.start('visible');
+  }, [aboutInView, servicesInView, projectsInView, contactInView, aboutControls, servicesControls, projectsControls, contactControls]);
 
-  const scrollToNextSection = () => {
+  // Improved smooth scroll behavior
+  const scrollToSection = (ref: any) => {
+    if (!ref.current) return;
+    
+    const yOffset = -70; // Adjusted for navbar height
+    const elementPosition = ref.current.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.scrollY + yOffset;
+
     window.scrollTo({
-      top: window.innerHeight,
+      top: offsetPosition,
       behavior: 'smooth'
     });
   };
 
+  // Optimized animation variants with shorter duration - even faster for mobile
+  const sectionVariants = {
+    hidden: { opacity: 0, y: isMobile ? 20 : 30 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { 
+        duration: isMobile ? 0.4 : 0.6,
+        staggerChildren: isMobile ? 0.08 : 0.1,
+        delayChildren: isMobile ? 0.1 : 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: isMobile ? 10 : 15 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: isMobile ? 0.3 : 0.4 }
+    }
+  };
+
+  // Service items
+  const services = [
+    {
+      title: "Mobile App Development",
+      description: "Building beautiful, high-performance mobile applications using Flutter for both Android and iOS platforms."
+    },
+    {
+      title: "UI/UX Design",
+      description: "Creating intuitive and engaging user interfaces with a focus on user experience and modern design principles."
+    },
+    {
+      title: "Backend Integration",
+      description: "Seamlessly integrating applications with backend services, APIs, and databases for complete solutions."
+    },
+    {
+      title: "Maintenance & Support",
+      description: "Providing ongoing support, updates, and maintenance to ensure your application stays current and functional."
+    }
+  ];
+
+  // Project items
   const projects = [
     {
-      title: "E-Commerce App",
-      description: "A full-featured e-commerce application built with Flutter, featuring real-time inventory management and secure payment processing.",
-      tech: ["Flutter", "Firebase", "Stripe", "Provider"],
-      image: "https://images.unsplash.com/photo-1557821552-17105176677c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2088&q=80"
+      title: "E-Commerce Platform",
+      description: "A comprehensive e-commerce solution with product management, cart functionality, and secure payment processing.",
+      tags: ["Flutter", "Firebase", "Stripe"],
+      image: "https://images.unsplash.com/photo-1557821552-17105176677c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
     },
     {
-      title: "Social Media Platform",
-      description: "A social media platform with real-time messaging, story sharing, and user interactions.",
-      tech: ["Flutter", "Firebase", "WebRTC", "Bloc"],
-      image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2087&q=80"
+      title: "Social Media App",
+      description: "A feature-rich social platform with real-time messaging, story sharing, and robust user interactions.",
+      tags: ["Flutter", "Firebase", "WebRTC"],
+      image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
     },
     {
-      title: "Fitness Tracking App",
-      description: "A comprehensive fitness tracking application with workout planning and progress monitoring.",
-      tech: ["Flutter", "SQLite", "Charts", "GetX"],
-      image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+      title: "Fitness Tracker",
+      description: "A health-focused application with workout planning, progress monitoring, and nutritional guidance.",
+      tags: ["Flutter", "SQLite", "Charts"],
+      image: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
     }
   ];
 
   return (
-    <HomeContainer ref={containerRef}>
+    <HomeContainer>
+      {/* Background stars - optimized render with even lower particle count for mobile */}
       <BackgroundCanvas>
-        <Canvas>
-          <OrbitControls enableZoom={false} enablePan={false} />
-          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+        <Canvas 
+          frameloop="demand" 
+          dpr={isMobile ? [0.5, 1] : [1, 1.5]} // Lower resolution on mobile
+        >
+          <Stars 
+            radius={200} 
+            depth={60} 
+            count={isMobile ? 1500 : 2500} 
+            factor={4} 
+            saturation={0} 
+            fade 
+            speed={0.5} 
+          />
         </Canvas>
       </BackgroundCanvas>
       
-      <FloatingShape
-        animate={{
-          x: [0, 100, 0],
-          y: [0, 50, 0],
-        }}
-        transition={{
-          duration: 20,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        style={{
-          top: '10%',
-          left: '10%',
-        }}
-      />
-      
-      <FloatingShape
-        animate={{
-          x: [0, -100, 0],
-          y: [0, -50, 0],
-        }}
-        transition={{
-          duration: 15,
-          repeat: Infinity,
-          ease: "linear",
-        }}
-        style={{
-          bottom: '10%',
-          right: '10%',
-        }}
-      />
-      
-      <HeroSection>
-        <Content
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          style={{ y: y, opacity: opacity }}
-        >
-          <Title>Muhammad Anshif</Title>
-          <Subtitle>Flutter Developer & Software Engineer</Subtitle>
-          <CTAButton
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={scrollToNextSection}
-          >
-            Explore My Work
-          </CTAButton>
-        </Content>
-
-        <ScrollButton
-          onClick={scrollToNextSection}
-          style={{ opacity: scrollOpacity, y: scrollYValue }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          <ScrollText>Scroll to explore</ScrollText>
-          <ScrollLine
+      {/* Background shapes - simplified for mobile */}
+      {!isMobile && (
+        <>
+          <FloatingShape 
+            style={{ 
+              width: '300px', 
+              height: '300px', 
+              left: '10%', 
+              top: '20%' 
+            }}
             animate={{
-              scaleY: [1, 0.5, 1],
+              x: [0, 15, 0],
+              y: [0, 10, 0],
             }}
             transition={{
-              duration: 1.5,
+              duration: 25,
               repeat: Infinity,
-              ease: "easeInOut",
+              ease: "linear"
             }}
           />
-        </ScrollButton>
-      </HeroSection>
-
-      <Section ref={aboutRef}>
-        <Content
-          initial={{ opacity: 0, y: 50 }}
-          animate={isAboutInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          
+          <FloatingShape 
+            style={{ 
+              width: '250px', 
+              height: '250px', 
+              right: '10%', 
+              top: '40%' 
+            }}
+            animate={{
+              x: [0, -15, 0],
+              y: [0, -10, 0],
+            }}
+            transition={{
+              duration: 30,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
+        </>
+      )}
+      
+      {/* Hero section */}
+      <HeroSection>
+        <Content>
+          <Title
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            Muhammad Anshif
+          </Title>
+          
+          <SubTitle
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            Flutter Developer & Software Engineer creating beautiful, high-performance mobile applications.
+          </SubTitle>
+          
+          <ButtonGroup
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <Button
+              whileHover={!isMobile ? { scale: 1.05 } : {}}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => scrollToSection(projectsRef)}
+            >
+              View Projects
+            </Button>
+            
+            <SecondaryButton
+              whileHover={!isMobile ? { scale: 1.05 } : {}}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => scrollToSection(contactRef)}
+            >
+              Contact Me
+            </SecondaryButton>
+          </ButtonGroup>
+        </Content>
+        
+        <ScrollDown
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+          onClick={() => scrollToSection(aboutRef)}
+          whileHover={!isMobile ? { y: 5 } : {}}
         >
-          <SectionTitle>About Me</SectionTitle>
-          <Subtitle>
-            I'm a passionate Flutter developer with expertise in creating beautiful and functional mobile applications.
-            With a strong foundation in software engineering principles, I focus on delivering high-quality,
-            scalable solutions that provide exceptional user experiences.
-          </Subtitle>
-          <SkillsGrid>
-            <SkillCard 
-              whileHover={{ y: -10 }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={isAboutInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.4 }}
+          Scroll Down
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </ScrollDown>
+      </HeroSection>
+      
+      {/* About section */}
+      <Section
+        ref={aboutRef}
+        variants={sectionVariants}
+        initial="hidden"
+        animate={aboutControls}
+      >
+        <Content>
+          <SectionTitle variants={itemVariants}>
+            About Me
+          </SectionTitle>
+          
+          <SubTitle
+            variants={itemVariants}
+            style={{ textAlign: 'center' }}
+          >
+            I'm a passionate Flutter developer with 5+ years of experience creating beautiful, 
+            high-performance mobile applications.
+          </SubTitle>
+          
+          <Grid variants={itemVariants}>
+            <Card
+              whileHover={!isMobile ? { y: -10 } : {}}
+              transition={!isMobile ? { type: 'spring', stiffness: 300 } : {}}
             >
-              <h3>Mobile Development</h3>
-              <p>Flutter, Dart, iOS, Android</p>
-            </SkillCard>
-            <SkillCard 
-              whileHover={{ y: -10 }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={isAboutInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.6 }}
+              <CardTitle>Background</CardTitle>
+              <CardContent>
+                With a solid foundation in Computer Science and a passion for mobile development,
+                I've honed my skills in building applications that are both technically sound
+                and visually stunning.
+              </CardContent>
+            </Card>
+            
+            <Card
+              whileHover={!isMobile ? { y: -10 } : {}}
+              transition={!isMobile ? { type: 'spring', stiffness: 300 } : {}}
             >
-              <h3>Backend Development</h3>
-              <p>Node.js, Firebase, REST APIs</p>
-            </SkillCard>
-            <SkillCard 
-              whileHover={{ y: -10 }}
-              initial={{ opacity: 0, y: 20 }}
-              animate={isAboutInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.5, delay: 0.8 }}
+              <CardTitle>Expertise</CardTitle>
+              <CardContent>
+                I specialize in Flutter development, creating cross-platform applications
+                with native performance. My projects range from e-commerce solutions to
+                social media platforms and health apps.
+              </CardContent>
+            </Card>
+            
+            <Card
+              whileHover={!isMobile ? { y: -10 } : {}}
+              transition={!isMobile ? { type: 'spring', stiffness: 300 } : {}}
             >
-              <h3>UI/UX Design</h3>
-              <p>Figma, Adobe XD, Material Design</p>
-            </SkillCard>
-          </SkillsGrid>
+              <CardTitle>Approach</CardTitle>
+              <CardContent>
+                I believe in user-centered design and development process. I start with
+                understanding user needs and business goals, then translate them into
+                elegant, functional applications.
+              </CardContent>
+            </Card>
+          </Grid>
         </Content>
       </Section>
-
-      <Section ref={projectsRef}>
-        <Content
-          initial={{ opacity: 0, y: 50 }}
-          animate={isProjectsInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          <SectionTitle>My Projects</SectionTitle>
-          <ProjectsGrid>
-            {projects.map((project, index) => (
-              <ProjectCard 
+      
+      {/* Services section */}
+      <Section
+        ref={servicesRef}
+        variants={sectionVariants}
+        initial="hidden"
+        animate={servicesControls}
+      >
+        <Content>
+          <SectionTitle variants={itemVariants}>
+            Services
+          </SectionTitle>
+          
+          <Grid variants={itemVariants}>
+            {services.map((service, index) => (
+              <Card
                 key={index}
-                whileHover={{ y: -10 }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={isProjectsInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ duration: 0.5, delay: 0.4 + index * 0.2 }}
+                whileHover={!isMobile ? { y: -10 } : {}}
+                transition={!isMobile ? { type: 'spring', stiffness: 300 } : {}}
+              >
+                <CardTitle>{service.title}</CardTitle>
+                <CardContent>
+                  {service.description}
+                </CardContent>
+              </Card>
+            ))}
+          </Grid>
+        </Content>
+      </Section>
+      
+      {/* Projects section */}
+      <Section
+        ref={projectsRef}
+        variants={sectionVariants}
+        initial="hidden"
+        animate={projectsControls}
+      >
+        <Content>
+          <SectionTitle variants={itemVariants}>
+            Projects
+          </SectionTitle>
+          
+          <Grid variants={itemVariants}>
+            {projects.map((project, index) => (
+              <ProjectCard
+                key={index}
+                whileHover={!isMobile ? { y: -10 } : {}}
+                transition={!isMobile ? { type: 'spring', stiffness: 300 } : {}}
               >
                 <ProjectImage>
-                  <img src={project.image} alt={project.title} />
+                  <img 
+                    src={project.image} 
+                    alt={project.title}
+                    loading="lazy" // Add lazy loading for images
+                  />
                 </ProjectImage>
                 <ProjectContent>
                   <ProjectTitle>{project.title}</ProjectTitle>
-                  <ProjectDescription>{project.description}</ProjectDescription>
-                  <TechStack>
-                    {project.tech.map((tech, techIndex) => (
-                      <TechTag key={techIndex}>{tech}</TechTag>
+                  <ProjectDescription>
+                    {project.description}
+                  </ProjectDescription>
+                  <TagContainer>
+                    {project.tags.map((tag, tagIndex) => (
+                      <Tag key={tagIndex}>{tag}</Tag>
                     ))}
-                  </TechStack>
+                  </TagContainer>
                 </ProjectContent>
               </ProjectCard>
             ))}
-          </ProjectsGrid>
+          </Grid>
+        </Content>
+      </Section>
+      
+      {/* Contact section */}
+      <Section
+        ref={contactRef}
+        variants={sectionVariants}
+        initial="hidden"
+        animate={contactControls}
+      >
+        <Content>
+          <SectionTitle variants={itemVariants}>
+            Contact Me
+          </SectionTitle>
+          
+          <SubTitle
+            variants={itemVariants}
+            style={{ textAlign: 'center' }}
+          >
+            Have a project in mind? Feel free to reach out and I'll get back to you as soon as possible.
+          </SubTitle>
+          
+          <ContactForm
+            variants={itemVariants}
+            onSubmit={(e) => e.preventDefault()}
+          >
+            <FormGroup>
+              <Label>Name</Label>
+              <Input type="text" placeholder="Your Name" />
+            </FormGroup>
+            
+            <FormGroup>
+              <Label>Email</Label>
+              <Input type="email" placeholder="Your Email" />
+            </FormGroup>
+            
+            <FormGroup>
+              <Label>Message</Label>
+              <TextArea placeholder="Your Message" />
+            </FormGroup>
+            
+            <Button
+              type="submit"
+              whileHover={!isMobile ? { scale: 1.05 } : {}}
+              whileTap={{ scale: 0.95 }}
+            >
+              Send Message
+            </Button>
+          </ContactForm>
         </Content>
       </Section>
     </HomeContainer>
