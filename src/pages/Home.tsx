@@ -726,6 +726,31 @@ const Home: React.FC<HomeProps> = ({ aboutRef, projectsRef, contactRef, scrollTo
             >
               Contact Me
             </SecondaryButton>
+            
+            {resumeUrl && (
+              <ResumeButton
+                href={resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ rotate: 0 }}
+                animate={{ 
+                  rotate: [0, 3, -3, 3, 0],
+                }}
+                transition={{ 
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  duration: 2,
+                  repeatDelay: 5
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-4-4m4 4l4-4m-4 10v-6" />
+                </svg>
+                Resume
+              </ResumeButton>
+            )}
           </ButtonGroup>
         </Content>
         
