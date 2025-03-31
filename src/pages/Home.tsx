@@ -466,34 +466,6 @@ const FloatingShape = styled(motion.div)`
   }
 `;
 
-// Add new styled component for the resume button
-const ResumeButton = styled(motion.a)`
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0.8rem 1.5rem;
-  background: linear-gradient(45deg, #6c63ff, #ff6584);
-  border: none;
-  border-radius: 50px;
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 1.5rem;
-  text-decoration: none;
-  box-shadow: 0 4px 15px rgba(108, 99, 255, 0.2);
-  
-  svg {
-    width: 18px;
-    height: 18px;
-  }
-  
-  &:hover {
-    box-shadow: 0 6px 20px rgba(108, 99, 255, 0.3);
-    transform: translateY(-2px);
-  }
-`;
-
 // Main component
 interface HomeProps {
   aboutRef: React.RefObject<HTMLDivElement | null>;
@@ -728,28 +700,25 @@ const Home: React.FC<HomeProps> = ({ aboutRef, projectsRef, contactRef, scrollTo
             </SecondaryButton>
             
             {resumeUrl && (
-              <ResumeButton
+              <Button
+                as="a"
                 href={resumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                whileHover={{ scale: 1.05 }}
+                whileHover={!isMobile ? { scale: 1.05 } : {}}
                 whileTap={{ scale: 0.95 }}
-                initial={{ rotate: 0 }}
-                animate={{ 
-                  rotate: [0, 3, -3, 3, 0],
-                }}
-                transition={{ 
-                  repeat: Infinity,
-                  repeatType: "loop",
-                  duration: 2,
-                  repeatDelay: 5
-                }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                  style={{ width: '18px', height: '18px', marginRight: '8px' }}
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-4-4m4 4l4-4m-4 10v-6" />
                 </svg>
                 Resume
-              </ResumeButton>
+              </Button>
             )}
           </ButtonGroup>
         </Content>
@@ -831,28 +800,25 @@ const Home: React.FC<HomeProps> = ({ aboutRef, projectsRef, contactRef, scrollTo
               style={{ textAlign: 'center', marginTop: '2rem' }}
               variants={itemVariants}
             >
-              <ResumeButton 
+              <Button
+                as="a"
                 href={resumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                initial={{ rotate: 0 }}
-                animate={{ 
-                  rotate: [0, 3, -3, 3, 0],
-                }}
-                transition={{ 
-                  repeat: Infinity,
-                  repeatType: "loop",
-                  duration: 2,
-                  repeatDelay: 3
-                }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  fill="none" 
+                  viewBox="0 0 24 24" 
+                  stroke="currentColor"
+                  style={{ width: '18px', height: '18px', marginRight: '8px' }}
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-4-4m4 4l4-4m-4 10v-6" />
                 </svg>
                 Download My Resume
-              </ResumeButton>
+              </Button>
             </motion.div>
           )}
         </Content>
