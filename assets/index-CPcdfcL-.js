@@ -4555,4 +4555,4 @@ No matching component was found for:
   min-height: 100vh;
   background-color: var(--primary);
   color: var(--text);
-`;function iX(){return Ht.jsxs(nX,{children:[Ht.jsx(i5,{}),Ht.jsx(u5,{}),Ht.jsx(PR,{mode:"wait",children:Ht.jsxs(XO,{children:[Ht.jsx(r1,{path:"/",element:Ht.jsx(vR,{})}),Ht.jsx(r1,{path:"*",element:Ht.jsx(vR,{})})]})})]})}$N.createRoot(document.getElementById("root")).render(Ht.jsx(ro.StrictMode,{children:Ht.jsx(dL,{basename:"/anshif-portfolio",children:Ht.jsx(iX,{})})}));
+`;function iX(){return Ht.jsxs(nX,{children:[Ht.jsx(i5,{}),Ht.jsx(u5,{}),Ht.jsx(PR,{mode:"wait",children:Ht.jsxs(XO,{children:[Ht.jsx(r1,{path:"/",element:Ht.jsx(vR,{})}),Ht.jsx(r1,{path:"*",element:Ht.jsx(vR,{})})]})})]})}$N.createRoot(document.getElementById("root")).render(Ht.jsx(ro.StrictMode,{children:Ht.jsx(dL,{basename:"/profile",children:Ht.jsx(iX,{})})}));
