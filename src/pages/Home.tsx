@@ -465,12 +465,15 @@ const FloatingShape = styled(motion.div)`
 `;
 
 // Main component
-const Home = () => {
+interface HomeProps {
+  aboutRef: React.RefObject<HTMLDivElement>;
+  projectsRef: React.RefObject<HTMLDivElement>;
+  contactRef: React.RefObject<HTMLDivElement>;
+  scrollToSection: (ref: React.RefObject<HTMLDivElement>) => void;
+}
+
+const Home: React.FC<HomeProps> = ({ aboutRef, projectsRef, contactRef, scrollToSection }) => {
   const [isMobile, setIsMobile] = useState(false);
-  const aboutRef = useRef<HTMLDivElement>(null);
-  const servicesRef = useRef<HTMLDivElement>(null);
-  const projectsRef = useRef<HTMLDivElement>(null);
-  const contactRef = useRef<HTMLDivElement>(null);
   
   // Check for mobile device on mount
   useEffect(() => {
@@ -494,7 +497,7 @@ const Home = () => {
 
   // For section animations - use a lower threshold for better performance
   const aboutInView = useInView(aboutRef, { once: true, amount: 0.1 });
-  const servicesInView = useInView(servicesRef, { once: true, amount: 0.1 });
+  const servicesInView = useInView(aboutRef, { once: true, amount: 0.1 }); // Using aboutRef for services
   const projectsInView = useInView(projectsRef, { once: true, amount: 0.1 });
   const contactInView = useInView(contactRef, { once: true, amount: 0.1 });
 
@@ -505,20 +508,6 @@ const Home = () => {
     if (projectsInView) projectsControls.start('visible');
     if (contactInView) contactControls.start('visible');
   }, [aboutInView, servicesInView, projectsInView, contactInView, aboutControls, servicesControls, projectsControls, contactControls]);
-
-  // Improved smooth scroll behavior
-  const scrollToSection = (ref: any) => {
-    if (!ref.current) return;
-    
-    const yOffset = -70; // Adjusted for navbar height
-    const elementPosition = ref.current.getBoundingClientRect().top;
-    const offsetPosition = elementPosition + window.scrollY + yOffset;
-
-    window.scrollTo({
-      top: offsetPosition,
-      behavior: 'smooth'
-    });
-  };
 
   // Optimized animation variants with shorter duration - even faster for mobile
   const sectionVariants = {
@@ -764,7 +753,7 @@ const Home = () => {
       
       {/* Services section */}
       <Section
-        ref={servicesRef}
+        ref={aboutRef}
         variants={sectionVariants}
         initial="hidden"
         animate={servicesControls}

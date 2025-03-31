@@ -56,11 +56,12 @@ const NavLinks = styled.div<{ $isOpen: boolean }>`
   }
 `;
 
-const NavLink = styled(Link)<{ $active: boolean }>`
+const NavLink = styled.a<{ $active: boolean }>`
   color: ${props => props.$active ? 'var(--accent)' : 'var(--text)'};
   text-decoration: none;
   font-weight: 500;
   position: relative;
+  cursor: pointer;
   
   @media (max-width: 768px) {
     font-size: 1.5rem;
@@ -137,20 +138,47 @@ const Overlay = styled(motion.div)`
   }
 `;
 
-const Navbar = () => {
+interface NavbarProps {
+  scrollToSection?: (ref: React.RefObject<HTMLDivElement>) => void;
+  aboutRef?: React.RefObject<HTMLDivElement>;
+  projectsRef?: React.RefObject<HTMLDivElement>;
+  contactRef?: React.RefObject<HTMLDivElement>;
+}
+
+const Navbar: React.FC<NavbarProps> = ({ scrollToSection, aboutRef, projectsRef, contactRef }) => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
 
   // Handle scrolling effect
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
+      
+      // Determine active section based on scroll position
+      const scrollPosition = window.scrollY;
+      
+      if (aboutRef?.current && projectsRef?.current && contactRef?.current) {
+        const aboutOffset = aboutRef.current.offsetTop - 100;
+        const projectsOffset = projectsRef.current.offsetTop - 100;
+        const contactOffset = contactRef.current.offsetTop - 100;
+        
+        if (scrollPosition < aboutOffset) {
+          setActiveSection('home');
+        } else if (scrollPosition < projectsOffset) {
+          setActiveSection('about');
+        } else if (scrollPosition < contactOffset) {
+          setActiveSection('projects');
+        } else {
+          setActiveSection('contact');
+        }
+      }
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [aboutRef, projectsRef, contactRef]);
   
   // Close mobile menu when route changes
   useEffect(() => {
@@ -172,6 +200,13 @@ const Navbar = () => {
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleNavClick = (section: string, ref?: React.RefObject<HTMLDivElement>) => {
+    if (scrollToSection && ref) {
+      scrollToSection(ref);
+    }
+    setIsOpen(false);
   };
 
   return (
@@ -204,16 +239,28 @@ const Navbar = () => {
       </AnimatePresence>
       
       <NavLinks $isOpen={isOpen}>
-        <NavLink to="/" $active={location.pathname === '/'} onClick={() => setIsOpen(false)}>
+        <NavLink 
+          onClick={() => handleNavClick('home')} 
+          $active={activeSection === 'home'}
+        >
           Home
         </NavLink>
-        <NavLink to="/about" $active={location.pathname === '/about'} onClick={() => setIsOpen(false)}>
+        <NavLink 
+          onClick={() => handleNavClick('about', aboutRef)} 
+          $active={activeSection === 'about'}
+        >
           About
         </NavLink>
-        <NavLink to="/projects" $active={location.pathname === '/projects'} onClick={() => setIsOpen(false)}>
+        <NavLink 
+          onClick={() => handleNavClick('projects', projectsRef)} 
+          $active={activeSection === 'projects'}
+        >
           Projects
         </NavLink>
-        <NavLink to="/contact" $active={location.pathname === '/contact'} onClick={() => setIsOpen(false)}>
+        <NavLink 
+          onClick={() => handleNavClick('contact', contactRef)} 
+          $active={activeSection === 'contact'}
+        >
           Contact
         </NavLink>
       </NavLinks>
