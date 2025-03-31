@@ -3,6 +3,8 @@ import styled from 'styled-components';
 import { motion, useAnimation, useInView } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import { Stars } from '@react-three/drei';
+import { db } from '../firebaseconfig';
+import { doc, getDoc } from 'firebase/firestore';
 
 // Styled components with enhanced visuals and mobile optimization
 const HomeContainer = styled.div`
@@ -464,16 +466,45 @@ const FloatingShape = styled(motion.div)`
   }
 `;
 
+// Add new styled component for the resume button
+const ResumeButton = styled(motion.a)`
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.8rem 1.5rem;
+  background: linear-gradient(45deg, #6c63ff, #ff6584);
+  border: none;
+  border-radius: 50px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 1.5rem;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(108, 99, 255, 0.2);
+  
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  &:hover {
+    box-shadow: 0 6px 20px rgba(108, 99, 255, 0.3);
+    transform: translateY(-2px);
+  }
+`;
+
 // Main component
 interface HomeProps {
-  aboutRef: React.RefObject<HTMLDivElement>;
-  projectsRef: React.RefObject<HTMLDivElement>;
-  contactRef: React.RefObject<HTMLDivElement>;
-  scrollToSection: (ref: React.RefObject<HTMLDivElement>) => void;
+  aboutRef: React.RefObject<HTMLDivElement | null>;
+  projectsRef: React.RefObject<HTMLDivElement | null>;
+  contactRef: React.RefObject<HTMLDivElement | null>;
+  scrollToSection: (ref: React.RefObject<HTMLDivElement | null>) => void;
 }
 
 const Home: React.FC<HomeProps> = ({ aboutRef, projectsRef, contactRef, scrollToSection }) => {
   const [isMobile, setIsMobile] = useState(false);
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
   
   // Check for mobile device on mount
   useEffect(() => {
@@ -487,6 +518,27 @@ const Home: React.FC<HomeProps> = ({ aboutRef, projectsRef, contactRef, scrollTo
     return () => {
       window.removeEventListener('resize', checkMobile);
     };
+  }, []);
+  
+  // Fetch resume URL from Firestore
+  useEffect(() => {
+    const fetchResumeUrl = async () => {
+      try {
+        const assetDocRef = doc(db, "assets", "assets");
+        const assetDoc = await getDoc(assetDocRef);
+        
+        if (assetDoc.exists()) {
+          const data = assetDoc.data();
+          if (data.resume) {
+            setResumeUrl(data.resume);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching resume URL:", error);
+      }
+    };
+    
+    fetchResumeUrl();
   }, []);
   
   // Animation controls for each section
@@ -748,6 +800,36 @@ const Home: React.FC<HomeProps> = ({ aboutRef, projectsRef, contactRef, scrollTo
               </CardContent>
             </Card>
           </Grid>
+          
+          {resumeUrl && (
+            <motion.div 
+              style={{ textAlign: 'center', marginTop: '2rem' }}
+              variants={itemVariants}
+            >
+              <ResumeButton 
+                href={resumeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                initial={{ rotate: 0 }}
+                animate={{ 
+                  rotate: [0, 3, -3, 3, 0],
+                }}
+                transition={{ 
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  duration: 2,
+                  repeatDelay: 3
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-4-4m4 4l4-4m-4 10v-6" />
+                </svg>
+                Download My Resume
+              </ResumeButton>
+            </motion.div>
+          )}
         </Content>
       </Section>
       

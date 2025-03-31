@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { useAdmin } from '../../context/AdminContext';
+import { db } from '../../firebaseconfig';
+import { doc, getDoc } from 'firebase/firestore';
 
 // Styled components for the dashboard
 const DashboardContainer = styled.div`
@@ -110,9 +112,50 @@ const CardContent = styled.p`
   line-height: 1.5;
 `;
 
+const ResumeSection = styled(motion.div)`
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 30px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin: 30px 0;
+`;
+
+const ResumeTitle = styled.h2`
+  font-size: 1.5rem;
+  margin-bottom: 20px;
+  color: #fff;
+`;
+
+const ResumeDownloadButton = styled(motion.a)`
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 24px;
+  background: linear-gradient(45deg, #6c63ff, #6259db);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  &:hover {
+    box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+  }
+`;
+
 const Dashboard = () => {
   const { admin, isAuthenticated, logout } = useAdmin();
   const navigate = useNavigate();
+  const [resumeUrl, setResumeUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     // Redirect to login if not authenticated
@@ -120,6 +163,29 @@ const Dashboard = () => {
       navigate('/admin');
     }
   }, [isAuthenticated, navigate]);
+  
+  useEffect(() => {
+    // Fetch resume URL from Firestore
+    const fetchResumeUrl = async () => {
+      try {
+        const assetDocRef = doc(db, "assets", "assets");
+        const assetDoc = await getDoc(assetDocRef);
+        
+        if (assetDoc.exists()) {
+          const data = assetDoc.data();
+          if (data.resume) {
+            setResumeUrl(data.resume);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching resume URL:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchResumeUrl();
+  }, []);
   
   const handleLogout = () => {
     logout();
@@ -158,11 +224,43 @@ const Dashboard = () => {
           </WelcomeMessage>
         </WelcomeCard>
         
+        {resumeUrl && (
+          <ResumeSection
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <ResumeTitle>Your Resume</ResumeTitle>
+            <ResumeDownloadButton 
+              href={resumeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              initial={{ rotate: 0 }}
+              animate={{ 
+                rotate: [0, 5, -5, 5, 0],
+              }}
+              transition={{ 
+                repeat: Infinity, 
+                repeatType: "loop", 
+                duration: 2,
+                repeatDelay: 2
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-4-4m4 4l4-4m-4 10v-6" />
+              </svg>
+              Download Resume
+            </ResumeDownloadButton>
+          </ResumeSection>
+        )}
+        
         <DashboardGrid>
           <DashboardCard
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
+            transition={{ duration: 0.5, delay: resumeUrl ? 0.3 : 0.1 }}
           >
             <CardTitle>Portfolio Management</CardTitle>
             <CardContent>
@@ -173,7 +271,7 @@ const Dashboard = () => {
           <DashboardCard
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: resumeUrl ? 0.4 : 0.2 }}
           >
             <CardTitle>User Messages</CardTitle>
             <CardContent>
@@ -184,7 +282,7 @@ const Dashboard = () => {
           <DashboardCard
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: resumeUrl ? 0.5 : 0.3 }}
           >
             <CardTitle>Analytics</CardTitle>
             <CardContent>
