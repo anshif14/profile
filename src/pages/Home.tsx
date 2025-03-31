@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import styled from 'styled-components';
 import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';

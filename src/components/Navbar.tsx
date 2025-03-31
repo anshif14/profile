@@ -57,7 +57,8 @@ const NavLink = styled(motion(Link))<{ active?: boolean }>`
 `;
 
 const Navbar = () => {
-  const [scrolled, setScrolled] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
   const location = useLocation();
 
   useEffect(() => {
