@@ -311,9 +311,9 @@ const Home = () => {
   const isAboutInView = useInView(aboutRef, { once: true, margin: "-100px" });
   const isProjectsInView = useInView(projectsRef, { once: true, margin: "-100px" });
 
-  const contentY = useTransform(scrollYProgress, [0, 1], [0, 300]);
-  const contentOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const { opacity: buttonOpacity, y: buttonY } = useScrollAnimation(0, 300);
+  const y = useTransform(scrollYProgress, [0, 1000], [0, 300]);
+  const opacity = useTransform(scrollYProgress, [0, 300], [1, 0]);
+  const { opacity: scrollOpacity, y: scrollYValue } = useScrollAnimation(0, 300);
 
   const scrollToNextSection = () => {
     window.scrollTo({
@@ -389,7 +389,7 @@ const Home = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          style={{ y: contentY, opacity: contentOpacity }}
+          style={{ y: y, opacity: opacity }}
         >
           <Title>Muhammad Anshif</Title>
           <Subtitle>Flutter Developer & Software Engineer</Subtitle>
@@ -404,7 +404,7 @@ const Home = () => {
 
         <ScrollButton
           onClick={scrollToNextSection}
-          style={{ opacity: buttonOpacity, y: buttonY }}
+          style={{ opacity: scrollOpacity, y: scrollYValue }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
         >
